@@ -112,6 +112,7 @@ class PayrollERP(ctk.CTk):
             ("⏰ 근태 관리", self.show_attendance_list, 3),
             ("🏖️ 휴가 관리", self.show_leave_list, 4),
             ("💰 급여 계산", self.show_payroll_calculation, 5),
+            ("🔄 세콤 연동", self.show_secom_integration, 6),
         ]
         
         for text, command, row in main_menus:
@@ -122,12 +123,12 @@ class PayrollERP(ctk.CTk):
             self.nav_frame, 
             height=2, 
             fg_color=("gray70", "gray30")
-        ).grid(row=6, column=0, sticky="ew", padx=20, pady=15)
+        ).grid(row=7, column=0, sticky="ew", padx=20, pady=15)
         
         # 설정 메뉴
         setting_menus = [
-            ("🔧 근무 설정", self.show_work_schedule_settings, 7),
-            ("💸 잔업 설정", self.show_overtime_settings, 8),
+            ("🔧 근무 설정", self.show_work_schedule_settings, 8),
+            ("💸 잔업 설정", self.show_overtime_settings, 9),
         ]
         
         for text, command, row in setting_menus:
@@ -359,6 +360,13 @@ class PayrollERP(ctk.CTk):
         """잔업 설정"""
         self._clear_content()
         frame = OvertimeSettingsFrame(self.content_frame, self.config)
+        frame.pack(fill="both", expand=True)
+    
+    def show_secom_integration(self):
+        """세콤 연동"""
+        from secom_system_complete import SecomIntegrationFrame
+        self._clear_content()
+        frame = SecomIntegrationFrame(self.content_frame, self.db)
         frame.pack(fill="both", expand=True)
     
     # ==================== 다이얼로그 ====================
