@@ -12,7 +12,6 @@ import calendar
 from config_manager import ConfigManager, WorkSchedule, OvertimeRate
 from database_v2 import Database
 from payroll_calculator_v2 import AdvancedPayrollCalculator
-from secom_integration import SecomIntegration
 from leave_manager import LeaveManager, LeaveType, LeaveStatus
 
 # CustomTkinter 설정
