@@ -60,31 +60,51 @@ class SecomDatabaseConnector:
         except Exception as e:
             return False, f"연결 실패: {e}"
     
-    def _connect_mssql(self, server_ip: str, port: str, database: str, 
+    def _connect_mssql(self, server_ip: str, port: str, database: str,
                        user: str, password: str) -> tuple:
         """MS-SQL 연결"""
-        try:
-            # 연결 문자열 구성
-            if port:
-                server = f"{server_ip},{port}"
-            else:
-                server = server_ip
-            
-            conn_str = (
-                f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-                f"SERVER={server};"
-                f"DATABASE={database};"
-                f"UID={user};"
-                f"PWD={password}"
-            )
-            
-            self.connection = pyodbc.connect(conn_str, timeout=10)
-            self.cursor = self.connection.cursor()
-            
-            return True, "MS-SQL 연결 성공"
-        
-        except pyodbc.Error as e:
-            return False, f"MS-SQL 연결 실패: {e}"
+        # 서버 주소 구성
+        if port:
+            server = f"{server_ip},{port}"
+        else:
+            server = server_ip
+
+        # 사용 가능한 ODBC 드라이버 목록 (우선순위 순)
+        drivers = [
+            "ODBC Driver 18 for SQL Server",
+            "ODBC Driver 17 for SQL Server",
+            "ODBC Driver 13 for SQL Server",
+            "ODBC Driver 11 for SQL Server",
+            "SQL Server Native Client 11.0",
+            "SQL Server Native Client 10.0",
+            "SQL Server"
+        ]
+
+        last_error = None
+
+        # 각 드라이버를 순서대로 시도
+        for driver in drivers:
+            try:
+                conn_str = (
+                    f"DRIVER={{{driver}}};"
+                    f"SERVER={server};"
+                    f"DATABASE={database};"
+                    f"UID={user};"
+                    f"PWD={password};"
+                    f"TrustServerCertificate=yes;"  # SSL 인증서 문제 우회
+                )
+
+                self.connection = pyodbc.connect(conn_str, timeout=10)
+                self.cursor = self.connection.cursor()
+
+                return True, f"MS-SQL 연결 성공 (드라이버: {driver})"
+
+            except pyodbc.Error as e:
+                last_error = e
+                continue  # 다음 드라이버 시도
+
+        # 모든 드라이버가 실패한 경우
+        return False, f"MS-SQL 연결 실패: {last_error}\n\n💡 해결 방법:\n1. 'ODBC Driver 17 for SQL Server' 설치\n2. SQL Server가 실행 중인지 확인\n3. 방화벽 설정 확인"
     
     def _connect_mysql(self, server_ip: str, port: str, database: str,
                        user: str, password: str) -> tuple:
