@@ -18,6 +18,8 @@ from database_v2 import Database
 from payroll_calculator_v2 import AdvancedPayrollCalculator
 from secom_integration import SecomIntegration
 from leave_manager import LeaveManager
+from excel_import import ExcelEmployeeImporter
+from shift_scheduler import ShiftScheduler
 
 # GUI 모듈
 from gui_complete_part1 import ERPGuiHelper, AttendanceDialog, LeaveRequestDialog
@@ -64,12 +66,14 @@ class PayrollERP(ctk.CTk):
             self.calculator = AdvancedPayrollCalculator()
             self.secom = SecomIntegration()
             self.leave_mgr = LeaveManager()
-            
+            self.excel_importer = ExcelEmployeeImporter()
+            self.shift_scheduler = ShiftScheduler()
+
             # 테이블 생성
             self.db.create_tables()
             self.config.initialize_tables()
             self.leave_mgr.initialize_tables()
-            
+
         except Exception as e:
             messagebox.showerror("초기화 오류", f"시스템 초기화 실패:\n{e}")
             sys.exit(1)
@@ -129,6 +133,7 @@ class PayrollERP(ctk.CTk):
         setting_menus = [
             ("🔧 근무 설정", self.show_work_schedule_settings, 8),
             ("💸 잔업 설정", self.show_overtime_settings, 9),
+            ("🔄 교대 관리", self.show_shift_management, 10),
         ]
         
         for text, command, row in setting_menus:
@@ -275,26 +280,58 @@ class PayrollERP(ctk.CTk):
     def show_employee_management(self):
         """직원 관리"""
         from tkinter import ttk
-        
+
         self._clear_content()
-        
+
         # 헤더
         header = ctk.CTkFrame(self.content_frame, fg_color="transparent")
         header.pack(fill="x", padx=35, pady=(25, 15))
-        
+
         ctk.CTkLabel(
             header,
             text="👥 직원 관리",
             font=ctk.CTkFont(size=32, weight="bold")
         ).pack(side="left")
-        
+
+        # 버튼 컨테이너
+        btn_container = ctk.CTkFrame(header, fg_color="transparent")
+        btn_container.pack(side="right")
+
         ctk.CTkButton(
-            header,
+            btn_container,
+            text="📥 Excel 가져오기",
+            command=self._import_employees_from_excel,
+            height=40,
+            width=150,
+            font=ctk.CTkFont(size=14)
+        ).pack(side="left", padx=5)
+
+        ctk.CTkButton(
+            btn_container,
+            text="📤 Excel 내보내기",
+            command=self._export_employees_to_excel,
+            height=40,
+            width=150,
+            font=ctk.CTkFont(size=14)
+        ).pack(side="left", padx=5)
+
+        ctk.CTkButton(
+            btn_container,
+            text="📝 템플릿 생성",
+            command=self._create_excel_template,
+            height=40,
+            width=130,
+            font=ctk.CTkFont(size=14)
+        ).pack(side="left", padx=5)
+
+        ctk.CTkButton(
+            btn_container,
             text="➕ 직원 추가",
             command=self._add_employee_dialog,
             height=40,
+            width=120,
             font=ctk.CTkFont(size=14, weight="bold")
-        ).pack(side="right")
+        ).pack(side="left", padx=5)
         
         # 목록
         list_frame = ctk.CTkFrame(self.content_frame)
@@ -368,7 +405,174 @@ class PayrollERP(ctk.CTk):
         self._clear_content()
         frame = SecomIntegrationFrame(self.content_frame, self.db)
         frame.pack(fill="both", expand=True)
-    
+
+    def show_shift_management(self):
+        """교대 근무 관리"""
+        from tkinter import ttk
+
+        self._clear_content()
+
+        # 제목
+        ctk.CTkLabel(
+            self.content_frame,
+            text="🔄 교대 근무 관리",
+            font=ctk.CTkFont(size=32, weight="bold")
+        ).pack(pady=25, padx=35, anchor="w")
+
+        # 통계 섹션
+        stats_frame = ctk.CTkFrame(self.content_frame)
+        stats_frame.pack(fill="x", padx=35, pady=(0, 25))
+
+        ctk.CTkLabel(
+            stats_frame,
+            text="📊 교대 근무 현황",
+            font=ctk.CTkFont(size=20, weight="bold")
+        ).pack(pady=15, padx=20, anchor="w")
+
+        # 이번 달 통계
+        now = datetime.now()
+        stats = self.shift_scheduler.get_shift_statistics(now.year, now.month)
+
+        stats_info = ctk.CTkFrame(stats_frame, fg_color="transparent")
+        stats_info.pack(fill="x", padx=20, pady=(0, 15))
+
+        info_text = f"""
+        📅 {now.year}년 {now.month}월 기준
+
+        총 직원: {stats['total_employees']}명
+        주간 근무: {stats['day_shift_count']}명
+        야간 근무: {stats['night_shift_count']}명
+        고정 근무: {stats['fixed_schedule_count']}명
+        """
+
+        ctk.CTkLabel(
+            stats_info,
+            text=info_text,
+            font=ctk.CTkFont(size=14),
+            justify="left"
+        ).pack(anchor="w")
+
+        # 교대 할당 섹션
+        assign_frame = ctk.CTkFrame(self.content_frame)
+        assign_frame.pack(fill="both", expand=True, padx=35, pady=(0, 25))
+
+        ctk.CTkLabel(
+            assign_frame,
+            text="⚙️ 2교대 스케줄 할당",
+            font=ctk.CTkFont(size=20, weight="bold")
+        ).pack(pady=15, padx=20, anchor="w")
+
+        # 직원 선택
+        select_frame = ctk.CTkFrame(assign_frame, fg_color="transparent")
+        select_frame.pack(fill="both", expand=True, padx=20, pady=(0, 15))
+
+        # 직원 목록
+        employees = self.db.get_all_employees(include_resigned=False)
+
+        ctk.CTkLabel(
+            select_frame,
+            text="할당할 직원을 선택하세요:",
+            font=ctk.CTkFont(size=14)
+        ).pack(anchor="w", pady=5)
+
+        # 트리뷰
+        tree_frame = ctk.CTkFrame(select_frame)
+        tree_frame.pack(fill="both", expand=True, pady=10)
+
+        columns = ("선택", "직원코드", "이름", "부서", "현재근무형태")
+        tree = ttk.Treeview(tree_frame, columns=columns, show="tree headings", height=10)
+
+        for col in columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=120, anchor="center")
+
+        scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscroll=scrollbar.set)
+
+        tree.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # 직원 데이터 추가
+        for emp in employees:
+            schedule = self.config.get_schedule(emp.get('work_schedule_id', 'DAY_SHIFT'))
+            schedule_name = schedule['schedule_name'] if schedule else '-'
+
+            tree.insert("", "end", iid=emp['emp_id'], values=(
+                "☐",
+                emp['emp_code'],
+                emp['name'],
+                emp.get('department', '-'),
+                schedule_name
+            ))
+
+        # 체크박스 토글
+        def toggle_check(event):
+            item = tree.identify('item', event.x, event.y)
+            if item:
+                values = list(tree.item(item, 'values'))
+                values[0] = "☑" if values[0] == "☐" else "☐"
+                tree.item(item, values=values)
+
+        tree.bind('<Button-1>', toggle_check)
+
+        # 할당 옵션
+        option_frame = ctk.CTkFrame(select_frame, fg_color="transparent")
+        option_frame.pack(fill="x", pady=10)
+
+        ctk.CTkLabel(option_frame, text="시작일:", width=100).pack(side="left")
+        start_date_entry = ctk.CTkEntry(option_frame, width=150)
+        start_date_entry.insert(0, datetime.now().strftime("%Y-%m-01"))
+        start_date_entry.pack(side="left", padx=10)
+
+        ctk.CTkLabel(option_frame, text="교대 주기:", width=100).pack(side="left", padx=(20, 0))
+        rotation_entry = ctk.CTkEntry(option_frame, width=80)
+        rotation_entry.insert(0, "2")
+        rotation_entry.pack(side="left", padx=10)
+        ctk.CTkLabel(option_frame, text="주").pack(side="left")
+
+        # 할당 버튼
+        def assign_shifts():
+            selected_ids = []
+            for item in tree.get_children():
+                values = tree.item(item, 'values')
+                if values[0] == "☑":
+                    selected_ids.append(int(item))
+
+            if not selected_ids:
+                messagebox.showwarning("경고", "할당할 직원을 선택하세요")
+                return
+
+            start_date = start_date_entry.get()
+            try:
+                rotation_weeks = int(rotation_entry.get())
+            except:
+                messagebox.showerror("오류", "교대 주기는 숫자로 입력하세요")
+                return
+
+            success, error = self.shift_scheduler.bulk_assign_shifts(
+                selected_ids,
+                start_date,
+                rotation_weeks
+            )
+
+            messagebox.showinfo(
+                "할당 완료",
+                f"2교대 스케줄이 할당되었습니다!\n\n"
+                f"✅ 성공: {success}명\n"
+                f"❌ 실패: {error}명"
+            )
+
+            self.show_shift_management()
+
+        ctk.CTkButton(
+            assign_frame,
+            text="✅ 2교대 스케줄 할당",
+            command=assign_shifts,
+            height=45,
+            font=ctk.CTkFont(size=16, weight="bold"),
+            fg_color=("green", "darkgreen")
+        ).pack(padx=20, pady=15, fill="x")
+
     # ==================== 다이얼로그 ====================
     
     def _add_employee_dialog(self):
@@ -489,6 +693,100 @@ class PayrollERP(ctk.CTk):
     def _add_leave_dialog(self):
         """휴가 신청 다이얼로그"""
         LeaveRequestDialog(self, self.db, self.leave_mgr)
+
+    # ==================== Excel Import/Export ====================
+
+    def _create_excel_template(self):
+        """Excel 템플릿 생성"""
+        try:
+            template_path = self.excel_importer.create_template()
+            messagebox.showinfo(
+                "템플릿 생성 완료",
+                f"Excel 템플릿이 생성되었습니다!\n\n"
+                f"파일: {template_path}\n\n"
+                f"1. 엑셀 파일을 열어 직원 정보를 입력하세요\n"
+                f"2. '작성가이드' 시트에서 항목별 설명을 확인하세요\n"
+                f"3. '📥 Excel 가져오기' 버튼으로 직원을 등록하세요"
+            )
+        except Exception as e:
+            messagebox.showerror("오류", f"템플릿 생성 실패:\n{e}")
+
+    def _import_employees_from_excel(self):
+        """Excel에서 직원 가져오기"""
+        from tkinter import filedialog
+
+        # 파일 선택
+        file_path = filedialog.askopenfilename(
+            title="직원 목록 Excel 파일 선택",
+            filetypes=[("Excel 파일", "*.xlsx *.xls"), ("모든 파일", "*.*")]
+        )
+
+        if not file_path:
+            return
+
+        try:
+            # 가져오기 실행
+            success_count, error_count, errors = self.excel_importer.import_from_excel(
+                file_path,
+                skip_duplicates=True
+            )
+
+            # 결과 메시지
+            if error_count > 0:
+                error_msg = "\n".join(errors[:5])  # 최대 5개만 표시
+                if len(errors) > 5:
+                    error_msg += f"\n... 외 {len(errors) - 5}건"
+
+                messagebox.showwarning(
+                    "일부 오류 발생",
+                    f"가져오기 완료!\n\n"
+                    f"✅ 성공: {success_count}건\n"
+                    f"❌ 실패: {error_count}건\n\n"
+                    f"오류 내용:\n{error_msg}"
+                )
+            else:
+                messagebox.showinfo(
+                    "가져오기 완료",
+                    f"✅ {success_count}명의 직원이 추가되었습니다!"
+                )
+
+            # 직원 관리 화면 새로고침
+            self.show_employee_management()
+
+        except Exception as e:
+            messagebox.showerror("오류", f"Excel 가져오기 실패:\n{e}")
+
+    def _export_employees_to_excel(self):
+        """직원 목록을 Excel로 내보내기"""
+        from tkinter import filedialog
+        from datetime import datetime
+
+        # 저장 경로 선택
+        default_filename = f"직원목록_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        file_path = filedialog.asksaveasfilename(
+            title="직원 목록 저장",
+            initialfile=default_filename,
+            defaultextension=".xlsx",
+            filetypes=[("Excel 파일", "*.xlsx"), ("모든 파일", "*.*")]
+        )
+
+        if not file_path:
+            return
+
+        try:
+            # 내보내기 실행
+            result_path = self.excel_importer.export_to_excel(
+                file_path,
+                include_resigned=False
+            )
+
+            if result_path:
+                messagebox.showinfo(
+                    "내보내기 완료",
+                    f"직원 목록이 Excel로 저장되었습니다!\n\n파일: {result_path}"
+                )
+        except Exception as e:
+            messagebox.showerror("오류", f"Excel 내보내기 실패:\n{e}")
 
 
 def main():
