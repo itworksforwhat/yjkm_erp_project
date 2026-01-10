@@ -1,33 +1,37 @@
 package com.yjkm.erp.service;
 
-import lombok.extern.slf4j.Slf4j;
+import com.yjkm.erp.importer.SecomFileParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 /**
- * SECOM 임포트 서비스 - 최소 버전 (향후 확장 예정)
+ * SECOM 임포트 서비스 - 최소 버전
  */
-@Slf4j
+@Service
 public class SecomImportService {
+    private static final Logger log = LoggerFactory.getLogger(SecomImportService.class);
 
-    public record ImportResult(
-            boolean success,
-            int employeeCount,
-            int attendanceCount,
-            String message
-    ) {}
+    private final SecomFileParser secomFileParser;
 
-    /**
-     * 파일에서 SECOM 데이터를 임포트합니다.
-     * 현재는 최소 버전으로, 실제 파싱은 비활성화되어 있습니다.
-     */
-    public ImportResult importFromFile(String filePath) {
-        log.info("SECOM 임포트 요청 (파일: {})", filePath);
-        log.info("SECOM 기능은 현재 비활성화 상태입니다. 추후 업데이트될 예정입니다.");
+    public SecomImportService(SecomFileParser secomFileParser) {
+        this.secomFileParser = secomFileParser;
+    }
 
-        return new ImportResult(
-                false,
-                0,
-                0,
-                "SECOM 기능은 현재 비활성화 상태입니다. 다음 버전에서 지원 예정입니다."
-        );
+    public void importFromSecom(String filePath) {
+        log.info("SECOM 파일 임포트 시작: {}", filePath);
+
+        try {
+            SecomFileParser.SecomImportResult result = secomFileParser.parseFile(filePath);
+
+            if (!result.isSuccess()) {
+                log.warn("SECOM 임포트 실패: {}", result.getErrorMessage());
+                return;
+            }
+
+            log.info("SECOM 임포트 완료");
+        } catch (Exception e) {
+            log.error("SECOM 임포트 중 오류 발생", e);
+        }
     }
 }

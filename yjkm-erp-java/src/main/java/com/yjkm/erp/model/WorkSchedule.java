@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "work_schedules")
@@ -63,4 +64,30 @@ public class WorkSchedule {
 
     public Boolean getIsDefault() { return isDefault; }
     public void setIsDefault(Boolean isDefault) { this.isDefault = isDefault; }
+
+    // 메서드
+    public long calculateWorkingMinutes() {
+        if (startTime == null || endTime == null) {
+            return 0;
+        }
+        
+        long totalMinutes;
+        if (endTime.isAfter(startTime)) {
+            totalMinutes = ChronoUnit.MINUTES.between(startTime, endTime);
+        } else {
+            totalMinutes = ChronoUnit.MINUTES.between(startTime, LocalTime.MAX) + 1
+                    + ChronoUnit.MINUTES.between(LocalTime.MIN, endTime);
+        }
+        
+        int breakTime = (breakMinutes != null) ? breakMinutes : 0;
+        return Math.max(0, totalMinutes - breakTime);
+    }
+
+    public LocalTime getNightStart() {
+        return LocalTime.of(22, 0);
+    }
+
+    public LocalTime getNightEnd() {
+        return LocalTime.of(6, 0);
+    }
 }

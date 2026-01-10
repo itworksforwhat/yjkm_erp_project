@@ -1,14 +1,13 @@
 package com.yjkm.erp.importer;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SECOM 파일 파서 - 최소 버전 (향후 확장 예정)
  */
-@Slf4j
 public class SecomFileParser {
-
-    // 최소 버전: 실제 파싱 로직은 비활성화
+    private static final Logger log = LoggerFactory.getLogger(SecomFileParser.class);
 
     public static class SecomImportResult {
         private boolean success = false;
