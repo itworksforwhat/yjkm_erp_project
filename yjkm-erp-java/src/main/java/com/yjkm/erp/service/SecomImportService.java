@@ -3,19 +3,17 @@ package com.yjkm.erp.service;
 import com.yjkm.erp.importer.SecomFileParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 /**
  * SECOM 임포트 서비스 - 최소 버전
  */
-@Service
 public class SecomImportService {
     private static final Logger log = LoggerFactory.getLogger(SecomImportService.class);
 
     private final SecomFileParser secomFileParser;
 
-    public SecomImportService(SecomFileParser secomFileParser) {
-        this.secomFileParser = secomFileParser;
+    public SecomImportService() {
+        this.secomFileParser = new SecomFileParser();
     }
 
     public void importFromSecom(String filePath) {
