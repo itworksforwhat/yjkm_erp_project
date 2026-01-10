@@ -3,14 +3,15 @@ package com.yjkm.erp.util;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * 데이터베이스 유틸리티 클래스
+ * 데이터베이스 유틸리틸 클래스
  * EntityManager 관리 및 트랜잭션 처리
  */
-@Slf4j
 public class DatabaseUtil {
+    private static final Logger log = LoggerFactory.getLogger(DatabaseUtil.class);
 
     private static final String PERSISTENCE_UNIT_NAME = "yjkm-erp-pu";
     private static EntityManagerFactory entityManagerFactory;
@@ -37,7 +38,7 @@ public class DatabaseUtil {
     }
 
     /**
-     * 트랜잭션 내에서 작업 실행
+     * 트랜잭션 내에서 작업 실패
      */
     public static <T> T executeInTransaction(TransactionCallback<T> callback) {
         EntityManager em = getEntityManager();
@@ -50,7 +51,7 @@ public class DatabaseUtil {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            log.error("트랜잭션 실행 실패", e);
+            log.error("트랜잭션 실패", e);
             throw new RuntimeException("데이터베이스 작업 실패", e);
         } finally {
             em.close();
@@ -58,7 +59,7 @@ public class DatabaseUtil {
     }
 
     /**
-     * 트랜잭션 내에서 작업 실행 (반환값 없음)
+     * 트랜잭션 내에서 작업 실패 (반환값 없음)
      */
     public static void executeInTransaction(VoidTransactionCallback callback) {
         executeInTransaction(em -> {
@@ -87,7 +88,7 @@ public class DatabaseUtil {
             // 기본 근무형태 설정
             createDefaultWorkSchedules(em);
 
-            // 기본 잔업 계수 설정
+            // 기본 잡업 계수 설정
             createDefaultOvertimeRates(em);
 
             log.info("데이터베이스 초기화 완료");
@@ -96,7 +97,7 @@ public class DatabaseUtil {
     }
 
     private static void createDefaultWorkSchedules(EntityManager em) {
-        // 기존 근무형태 확인
+        // 기조 근무형태 확인
         long count = em.createQuery("SELECT COUNT(w) FROM WorkSchedule w", Long.class)
                 .getSingleResult();
 
@@ -104,40 +105,36 @@ public class DatabaseUtil {
             log.info("기본 근무형태 생성 중...");
 
             // 주간근무
-            com.yjkm.erp.model.WorkSchedule dayShift = com.yjkm.erp.model.WorkSchedule.builder()
-                    .scheduleName("주간근무 (09:00~18:00)")
-                    .startTime(java.time.LocalTime.of(9, 0))
-                    .endTime(java.time.LocalTime.of(18, 0))
-                    .breakMinutes(60)
-                    .isDefault(true)
-                    .build();
+            com.yjkm.erp.model.WorkSchedule dayShift = new com.yjkm.erp.model.WorkSchedule();
+            dayShift.setScheduleName("주간근무 (09:00~18:00)");
+            dayShift.setStartTime(java.time.LocalTime.of(9, 0));
+            dayShift.setEndTime(java.time.LocalTime.of(18, 0));
+            dayShift.setBreakMinutes(60);
+            dayShift.setIsDefault(true);
             em.persist(dayShift);
 
             // 야간근무
-            com.yjkm.erp.model.WorkSchedule nightShift = com.yjkm.erp.model.WorkSchedule.builder()
-                    .scheduleName("야간근무 (21:00~06:00)")
-                    .startTime(java.time.LocalTime.of(21, 0))
-                    .endTime(java.time.LocalTime.of(6, 0))
-                    .breakMinutes(60)
-                    .build();
+            com.yjkm.erp.model.WorkSchedule nightShift = new com.yjkm.erp.model.WorkSchedule();
+            nightShift.setScheduleName("야간근무 (21:00~06:00)");
+            nightShift.setStartTime(java.time.LocalTime.of(21, 0));
+            nightShift.setEndTime(java.time.LocalTime.of(6, 0));
+            nightShift.setBreakMinutes(60);
             em.persist(nightShift);
 
             // 2교대(주간)
-            com.yjkm.erp.model.WorkSchedule twoShiftDay = com.yjkm.erp.model.WorkSchedule.builder()
-                    .scheduleName("2교대(주간) (06:00~18:00)")
-                    .startTime(java.time.LocalTime.of(6, 0))
-                    .endTime(java.time.LocalTime.of(18, 0))
-                    .breakMinutes(60)
-                    .build();
+            com.yjkm.erp.model.WorkSchedule twoShiftDay = new com.yjkm.erp.model.WorkSchedule();
+            twoShiftDay.setScheduleName("2교대(주간) (06:00~18:00)");
+            twoShiftDay.setStartTime(java.time.LocalTime.of(6, 0));
+            twoShiftDay.setEndTime(java.time.LocalTime.of(18, 0));
+            twoShiftDay.setBreakMinutes(60);
             em.persist(twoShiftDay);
 
             // 2교대(야간)
-            com.yjkm.erp.model.WorkSchedule twoShiftNight = com.yjkm.erp.model.WorkSchedule.builder()
-                    .scheduleName("2교대(야간) (18:00~06:00)")
-                    .startTime(java.time.LocalTime.of(18, 0))
-                    .endTime(java.time.LocalTime.of(6, 0))
-                    .breakMinutes(60)
-                    .build();
+            com.yjkm.erp.model.WorkSchedule twoShiftNight = new com.yjkm.erp.model.WorkSchedule();
+            twoShiftNight.setScheduleName("2교대(야간) (18:00~06:00)");
+            twoShiftNight.setStartTime(java.time.LocalTime.of(18, 0));
+            twoShiftNight.setEndTime(java.time.LocalTime.of(6, 0));
+            twoShiftNight.setBreakMinutes(60);
             em.persist(twoShiftNight);
 
             log.info("기본 근무형태 4개 생성 완료");
@@ -145,44 +142,41 @@ public class DatabaseUtil {
     }
 
     private static void createDefaultOvertimeRates(EntityManager em) {
-        // 기존 잔업 계수 확인
+        // 기조 잡업 계수 확인
         long count = em.createQuery("SELECT COUNT(o) FROM OvertimeRate o", Long.class)
                 .getSingleResult();
 
         if (count == 0) {
-            log.info("기본 잔업 계수 생성 중...");
+            log.info("기본 잡업 계수 생성 중...");
 
             // 0~60분: 0.5배
-            com.yjkm.erp.model.OvertimeRate rate1 = com.yjkm.erp.model.OvertimeRate.builder()
-                    .fromMinutes(0)
-                    .toMinutes(60)
-                    .multiplier(0.5)
-                    .description("0~60분: 0.5배")
-                    .displayOrder(1)
-                    .build();
+            com.yjkm.erp.model.OvertimeRate rate1 = new com.yjkm.erp.model.OvertimeRate();
+            rate1.setFromMinutes(0);
+            rate1.setToMinutes(60);
+            rate1.setMultiplier(0.5);
+            rate1.setDescription("0~60분: 0.5배");
+            rate1.setDisplayOrder(1);
             em.persist(rate1);
 
             // 60~120분: 1.0배
-            com.yjkm.erp.model.OvertimeRate rate2 = com.yjkm.erp.model.OvertimeRate.builder()
-                    .fromMinutes(60)
-                    .toMinutes(120)
-                    .multiplier(1.0)
-                    .description("60~120분: 1.0배")
-                    .displayOrder(2)
-                    .build();
+            com.yjkm.erp.model.OvertimeRate rate2 = new com.yjkm.erp.model.OvertimeRate();
+            rate2.setFromMinutes(60);
+            rate2.setToMinutes(120);
+            rate2.setMultiplier(1.0);
+            rate2.setDescription("60~120분: 1.0배");
+            rate2.setDisplayOrder(2);
             em.persist(rate2);
 
             // 120분 이상: 2.0배
-            com.yjkm.erp.model.OvertimeRate rate3 = com.yjkm.erp.model.OvertimeRate.builder()
-                    .fromMinutes(120)
-                    .toMinutes(null)  // 무제한
-                    .multiplier(2.0)
-                    .description("120분 이상: 2.0배")
-                    .displayOrder(3)
-                    .build();
+            com.yjkm.erp.model.OvertimeRate rate3 = new com.yjkm.erp.model.OvertimeRate();
+            rate3.setFromMinutes(120);
+            rate3.setToMinutes(null);  // 무제한
+            rate3.setMultiplier(2.0);
+            rate3.setDescription("120분 이상: 2.0배");
+            rate3.setDisplayOrder(3);
             em.persist(rate3);
 
-            log.info("기본 잔업 계수 3개 생성 완료");
+            log.info("기본 잡업 계수 3개 생성 완료");
         }
     }
 
