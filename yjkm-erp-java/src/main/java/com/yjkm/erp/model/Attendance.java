@@ -1,26 +1,18 @@
 package com.yjkm.erp.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-
-/**
- * 근태 엔티티
- */
 @Entity
 @Table(name = "attendance",
        uniqueConstraints = @UniqueConstraint(columnNames = {"employee_id", "work_date"}))
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Attendance {
+    private static final Logger log = LoggerFactory.getLogger(Attendance.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,31 +24,31 @@ public class Attendance {
     private Employee employee;
 
     @Column(name = "work_date", nullable = false)
-    private LocalDate workDate;  // 근무일자
+    private LocalDate workDate;
 
     @Column(name = "check_in")
-    private LocalTime checkIn;  // 출근시간
+    private LocalTime checkIn;
 
     @Column(name = "check_out")
-    private LocalTime checkOut;  // 퇴근시간
+    private LocalTime checkOut;
 
     @Column(name = "overtime_minutes")
-    private Integer overtimeMinutes;  // 잔업시간 (분)
+    private Integer overtimeMinutes;
 
     @Column(name = "night_work_minutes")
-    private Integer nightWorkMinutes;  // 야간근무시간 (분)
+    private Integer nightWorkMinutes;
 
     @Column(name = "work_type", length = 20)
-    private String workType;  // 근무유형 (정상/지각/조퇴/결근)
+    private String workType;
 
     @Column(name = "is_holiday")
-    private Boolean isHoliday;  // 휴일근무 여부
+    private Boolean isHoliday;
 
     @Column(name = "holiday_rate")
-    private Double holidayRate;  // 휴일수당 배율
+    private Double holidayRate;
 
     @Column(name = "notes", columnDefinition = "TEXT")
-    private String notes;  // 비고
+    private String notes;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -64,9 +56,69 @@ public class Attendance {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
-    /**
-     * 총 근무시간 계산 (분)
-     */
+    // 생성자
+    public Attendance() {
+    }
+
+    public Attendance(Long attendanceId, Employee employee, LocalDate workDate, LocalTime checkIn,
+                      LocalTime checkOut, Integer overtimeMinutes, Integer nightWorkMinutes, String workType,
+                      Boolean isHoliday, Double holidayRate, String notes, LocalDate createdAt, LocalDate updatedAt) {
+        this.attendanceId = attendanceId;
+        this.employee = employee;
+        this.workDate = workDate;
+        this.checkIn = checkIn;
+        this.checkOut = checkOut;
+        this.overtimeMinutes = overtimeMinutes;
+        this.nightWorkMinutes = nightWorkMinutes;
+        this.workType = workType;
+        this.isHoliday = isHoliday;
+        this.holidayRate = holidayRate;
+        this.notes = notes;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    // Getter/Setter
+    public Long getAttendanceId() { return attendanceId; }
+    public void setAttendanceId(Long attendanceId) { this.attendanceId = attendanceId; }
+
+    public Employee getEmployee() { return employee; }
+    public void setEmployee(Employee employee) { this.employee = employee; }
+
+    public LocalDate getWorkDate() { return workDate; }
+    public void setWorkDate(LocalDate workDate) { this.workDate = workDate; }
+
+    public LocalTime getCheckIn() { return checkIn; }
+    public void setCheckIn(LocalTime checkIn) { this.checkIn = checkIn; }
+
+    public LocalTime getCheckOut() { return checkOut; }
+    public void setCheckOut(LocalTime checkOut) { this.checkOut = checkOut; }
+
+    public Integer getOvertimeMinutes() { return overtimeMinutes; }
+    public void setOvertimeMinutes(Integer overtimeMinutes) { this.overtimeMinutes = overtimeMinutes; }
+
+    public Integer getNightWorkMinutes() { return nightWorkMinutes; }
+    public void setNightWorkMinutes(Integer nightWorkMinutes) { this.nightWorkMinutes = nightWorkMinutes; }
+
+    public String getWorkType() { return workType; }
+    public void setWorkType(String workType) { this.workType = workType; }
+
+    public Boolean getIsHoliday() { return isHoliday; }
+    public void setIsHoliday(Boolean isHoliday) { this.isHoliday = isHoliday; }
+
+    public Double getHolidayRate() { return holidayRate; }
+    public void setHolidayRate(Double holidayRate) { this.holidayRate = holidayRate; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+    public LocalDate getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDate updatedAt) { this.updatedAt = updatedAt; }
+
+    // 메서드
     public long calculateTotalWorkMinutes() {
         if (checkIn == null || checkOut == null) {
             return 0;
@@ -76,7 +128,6 @@ public class Attendance {
         if (checkOut.isAfter(checkIn)) {
             totalMinutes = ChronoUnit.MINUTES.between(checkIn, checkOut);
         } else {
-            // 날짜 넘김
             totalMinutes = ChronoUnit.MINUTES.between(checkIn, LocalTime.MAX) + 1
                     + ChronoUnit.MINUTES.between(LocalTime.MIN, checkOut);
         }
@@ -84,9 +135,6 @@ public class Attendance {
         return totalMinutes;
     }
 
-    /**
-     * 정상 근무시간 계산 (분)
-     */
     public long calculateRegularWorkMinutes(WorkSchedule schedule) {
         if (schedule == null) {
             return calculateTotalWorkMinutes();
@@ -98,9 +146,6 @@ public class Attendance {
         return Math.min(scheduledMinutes, actualMinutes);
     }
 
-    /**
-     * 잔업 시간 자동 계산 및 업데이트
-     */
     public void updateOvertimeMinutes(WorkSchedule schedule) {
         if (schedule == null || checkIn == null || checkOut == null) {
             overtimeMinutes = 0;
@@ -113,22 +158,17 @@ public class Attendance {
         overtimeMinutes = (int) Math.max(0, actualMinutes - scheduledMinutes);
     }
 
-    /**
-     * 야간근무 시간 자동 계산 및 업데이트
-     */
     public void updateNightWorkMinutes(WorkSchedule schedule) {
         if (schedule == null || checkIn == null || checkOut == null) {
             nightWorkMinutes = 0;
             return;
         }
 
-        // 근무 시간대와 야간 시간대 (22:00~06:00)의 겹치는 부분 계산
-        LocalTime nightStart = schedule.getNightStart();  // 22:00
-        LocalTime nightEnd = schedule.getNightEnd();      // 06:00
+        LocalTime nightStart = LocalTime.of(22, 0);
+        LocalTime nightEnd = LocalTime.of(6, 0);
 
         long nightMinutes = 0;
 
-        // Case 1: 저녁 야간 (22:00 ~ 자정)
         if (!checkOut.isBefore(nightStart)) {
             LocalTime overlapStart = checkIn.isAfter(nightStart) ? checkIn : nightStart;
             LocalTime overlapEnd = checkOut;
@@ -137,7 +177,6 @@ public class Attendance {
             }
         }
 
-        // Case 2: 새벽 야간 (자정 ~ 06:00)
         if (checkOut.isBefore(checkIn) || checkOut.isBefore(nightEnd)) {
             LocalTime overlapStart = LocalTime.MIN;
             LocalTime overlapEnd = checkOut.isBefore(nightEnd) ? checkOut : nightEnd;
@@ -149,9 +188,6 @@ public class Attendance {
         nightWorkMinutes = (int) nightMinutes;
     }
 
-    /**
-     * 근무 유형 자동 판단
-     */
     public void determineWorkType(WorkSchedule schedule) {
         if (checkIn == null || checkOut == null) {
             workType = "결근";
@@ -167,11 +203,11 @@ public class Attendance {
         boolean isEarlyLeave = checkOut.isBefore(schedule.getEndTime().minusMinutes(10));
 
         if (isLate && isEarlyLeave) {
-            workType = "지각/조퇴";
+            workType = "지각/조턇";
         } else if (isLate) {
             workType = "지각";
         } else if (isEarlyLeave) {
-            workType = "조퇴";
+            workType = "조턇";
         } else {
             workType = "정상";
         }

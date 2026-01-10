@@ -1,23 +1,15 @@
 package com.yjkm.erp.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-
-/**
- * 휴가 엔티티
- */
 @Entity
 @Table(name = "leaves")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Leave {
+    private static final Logger log = LoggerFactory.getLogger(Leave.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,122 +20,105 @@ public class Leave {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "leave_type", nullable = false, length = 20)
-    private LeaveType leaveType;  // 휴가 유형
+    @Column(name = "leave_type", nullable = false, length = 50)
+    private String leaveType;
 
     @Column(name = "start_date", nullable = false)
-    private LocalDate startDate;  // 시작일
+    private LocalDate startDate;
 
     @Column(name = "end_date", nullable = false)
-    private LocalDate endDate;  // 종료일
+    private LocalDate endDate;
 
-    @Column(name = "days")
-    private Double days;  // 휴가일수 (0.5 = 반차)
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 20)
-    private LeaveStatus status;  // 상태 (대기/승인/거절)
+    @Column(name = "days", nullable = false)
+    private Double days;
 
     @Column(name = "reason", columnDefinition = "TEXT")
-    private String reason;  // 신청사유
+    private String reason;
 
-    @Column(name = "reject_reason", columnDefinition = "TEXT")
-    private String rejectReason;  // 거절사유
+    @Column(name = "status", length = 20)
+    private String status;
 
-    @Column(name = "applied_at")
-    private LocalDate appliedAt;  // 신청일
+    @Column(name = "approver_id")
+    private Long approverId;
 
     @Column(name = "approved_at")
-    private LocalDate approvedAt;  // 승인일
+    private LocalDate approvedAt;
 
-    @Column(name = "approved_by", length = 100)
-    private String approvedBy;  // 승인자
+    @Column(name = "created_at")
+    private LocalDate createdAt;
 
-    /**
-     * 휴가 승인
-     */
-    public void approve(String approver) {
-        this.status = LeaveStatus.APPROVED;
-        this.approvedAt = LocalDate.now();
-        this.approvedBy = approver;
+    @Column(name = "updated_at")
+    private LocalDate updatedAt;
+
+    // 생성자
+    public Leave() {
     }
 
-    /**
-     * 휴가 거절
-     */
-    public void reject(String reason) {
-        this.status = LeaveStatus.REJECTED;
-        this.rejectReason = reason;
+    public Leave(Long leaveId, Employee employee, String leaveType, LocalDate startDate, LocalDate endDate,
+                 Double days, String reason, String status, Long approverId, LocalDate approvedAt,
+                 LocalDate createdAt, LocalDate updatedAt) {
+        this.leaveId = leaveId;
+        this.employee = employee;
+        this.leaveType = leaveType;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.days = days;
+        this.reason = reason;
+        this.status = status;
+        this.approverId = approverId;
+        this.approvedAt = approvedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
+
+    // Getter/Setter
+    public Long getLeaveId() { return leaveId; }
+    public void setLeaveId(Long leaveId) { this.leaveId = leaveId; }
+
+    public Employee getEmployee() { return employee; }
+    public void setEmployee(Employee employee) { this.employee = employee; }
+
+    public String getLeaveType() { return leaveType; }
+    public void setLeaveType(String leaveType) { this.leaveType = leaveType; }
+
+    public LocalDate getStartDate() { return startDate; }
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+
+    public LocalDate getEndDate() { return endDate; }
+    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+
+    public Double getDays() { return days; }
+    public void setDays(Double days) { this.days = days; }
+
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public Long getApproverId() { return approverId; }
+    public void setApproverId(Long approverId) { this.approverId = approverId; }
+
+    public LocalDate getApprovedAt() { return approvedAt; }
+    public void setApprovedAt(LocalDate approvedAt) { this.approvedAt = approvedAt; }
+
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+    public LocalDate getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDate updatedAt) { this.updatedAt = updatedAt; }
 
     @PrePersist
     protected void onCreate() {
-        appliedAt = LocalDate.now();
+        createdAt = LocalDate.now();
+        updatedAt = LocalDate.now();
         if (status == null) {
-            status = LeaveStatus.PENDING;
-        }
-        if (days == null) {
-            days = calculateDays();
+            status = "대기";
         }
     }
 
-    /**
-     * 휴가일수 자동 계산
-     */
-    private Double calculateDays() {
-        if (startDate == null || endDate == null) {
-            return 0.0;
-        }
-
-        long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
-
-        // 반차 처리
-        if (leaveType == LeaveType.HALF_DAY) {
-            return 0.5;
-        }
-
-        return (double) daysBetween;
-    }
-
-    /**
-     * 휴가 유형 Enum
-     */
-    public enum LeaveType {
-        ANNUAL("연차"),
-        HALF_DAY("반차"),
-        SICK("병가"),
-        SPECIAL("특별휴가"),
-        UNPAID("무급휴가");
-
-        private final String description;
-
-        LeaveType(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-    }
-
-    /**
-     * 휴가 상태 Enum
-     */
-    public enum LeaveStatus {
-        PENDING("대기"),
-        APPROVED("승인"),
-        REJECTED("거절"),
-        CANCELLED("취소");
-
-        private final String description;
-
-        LeaveStatus(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
-        }
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDate.now();
     }
 }
