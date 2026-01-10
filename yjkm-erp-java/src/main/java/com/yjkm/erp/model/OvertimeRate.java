@@ -1,20 +1,13 @@
 package com.yjkm.erp.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
-/**
- * 잔업 수당 계수 엔티티
- */
 @Entity
 @Table(name = "overtime_rates")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class OvertimeRate {
+    private static final Logger log = LoggerFactory.getLogger(OvertimeRate.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,62 +15,50 @@ public class OvertimeRate {
     private Long rateId;
 
     @Column(name = "from_minutes", nullable = false)
-    private Integer fromMinutes;  // 시작 분 (예: 0, 60, 120)
+    private Integer fromMinutes;
 
     @Column(name = "to_minutes")
-    private Integer toMinutes;  // 종료 분 (null이면 무제한)
+    private Integer toMinutes;
 
     @Column(name = "multiplier", nullable = false)
-    private Double multiplier;  // 배율 (예: 0.5, 1.0, 1.5, 2.0)
+    private Double multiplier;
 
-    @Column(name = "description", length = 200)
-    private String description;  // 설명
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "display_order")
-    private Integer displayOrder;  // 표시 순서
+    private Integer displayOrder;
 
-    /**
-     * 특정 잔업시간(분)이 이 구간에 속하는지 확인
-     */
-    public boolean isInRange(int overtimeMinutes) {
-        if (toMinutes == null) {
-            // 무제한 구간
-            return overtimeMinutes >= fromMinutes;
-        } else {
-            return overtimeMinutes >= fromMinutes && overtimeMinutes < toMinutes;
-        }
+    // 생성자
+    public OvertimeRate() {
     }
 
-    /**
-     * 이 구간에서 적용 가능한 시간(분) 계산
-     */
-    public int getApplicableMinutes(int overtimeMinutes) {
-        if (!isInRange(overtimeMinutes)) {
-            return 0;
-        }
-
-        int start = Math.max(overtimeMinutes, fromMinutes);
-        int end = toMinutes != null ? Math.min(overtimeMinutes, toMinutes) : overtimeMinutes;
-
-        return Math.max(0, end - start);
+    public OvertimeRate(Long rateId, Integer fromMinutes, Integer toMinutes, Double multiplier,
+                        String description, Integer displayOrder) {
+        this.rateId = rateId;
+        this.fromMinutes = fromMinutes;
+        this.toMinutes = toMinutes;
+        this.multiplier = multiplier;
+        this.description = description;
+        this.displayOrder = displayOrder;
     }
 
-    /**
-     * 구간 설명 자동 생성
-     */
-    public String getAutoDescription() {
-        if (toMinutes == null) {
-            return String.format("%d분 이상 (배율: %.1f)", fromMinutes, multiplier);
-        } else {
-            return String.format("%d~%d분 (배율: %.1f)", fromMinutes, toMinutes, multiplier);
-        }
-    }
+    // Getter/Setter
+    public Long getRateId() { return rateId; }
+    public void setRateId(Long rateId) { this.rateId = rateId; }
 
-    @PrePersist
-    @PreUpdate
-    protected void onSave() {
-        if (description == null || description.isEmpty()) {
-            description = getAutoDescription();
-        }
-    }
+    public Integer getFromMinutes() { return fromMinutes; }
+    public void setFromMinutes(Integer fromMinutes) { this.fromMinutes = fromMinutes; }
+
+    public Integer getToMinutes() { return toMinutes; }
+    public void setToMinutes(Integer toMinutes) { this.toMinutes = toMinutes; }
+
+    public Double getMultiplier() { return multiplier; }
+    public void setMultiplier(Double multiplier) { this.multiplier = multiplier; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public Integer getDisplayOrder() { return displayOrder; }
+    public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
 }
