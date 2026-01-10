@@ -3,7 +3,8 @@ package com.yjkm.erp.service;
 import com.yjkm.erp.model.*;
 import com.yjkm.erp.util.DatabaseUtil;
 import jakarta.persistence.EntityManager;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -12,11 +13,11 @@ import java.util.List;
 /**
  * 급여 계산 엔진
  */
-@Slf4j
 public class PayrollCalculator {
+    private static final Logger log = LoggerFactory.getLogger(PayrollCalculator.class);
 
     /**
-     * 특정 월의 전체 직원 급여 계산
+     * 단정 월의 전체 직원 급여 계산
      */
     public int calculateMonthlyPayroll(int year, int month) {
         log.info("급여 계산 시작: {}년 {}월", year, month);
@@ -37,13 +38,13 @@ public class PayrollCalculator {
                 }
             }
 
-            log.info("급여 계산 완료: {}명", count);
+            log.info("급여 계산 완료: {}\uba85", count);
             return count;
         });
     }
 
     /**
-     * 특정 직원의 월별 급여 계산
+     * 단정 직원의 월별 급여 계산
      */
     private void calculateEmployeePayroll(EntityManager em, Employee employee, int year, int month) {
         // 기존 급여 기록 확인
@@ -57,16 +58,15 @@ public class PayrollCalculator {
 
         Payroll payroll;
         if (existing.isEmpty()) {
-            payroll = Payroll.builder()
-                    .employee(employee)
-                    .year(year)
-                    .month(month)
-                    .build();
+            payroll = new Payroll();
+            payroll.setEmployee(employee);
+            payroll.setYear(year);
+            payroll.setMonth(month);
         } else {
             payroll = existing.get(0);
         }
 
-        // 해당 월의 출퇴근 기록 조회
+        // 해당 월의 출쟱근 기록 조회
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
@@ -80,7 +80,7 @@ public class PayrollCalculator {
                 .setParameter("end", endDate)
                 .getResultList();
 
-        // 근무 정보 집계
+        // 근무 정보 쟑계
         int workDays = attendances.size();
         double totalWorkMinutes = 0;
         double totalOvertimeMinutes = 0;
@@ -116,7 +116,7 @@ public class PayrollCalculator {
         int basePay = (int) (totalWorkMinutes / 60.0 * hourlyWage);
         payroll.setBasePay(basePay);
 
-        // 잔업수당 (차등 계산)
+        // 잡업수당 (차등 계산)
         int overtimePay = calculateOvertimePay(em, (int) totalOvertimeMinutes, hourlyWage);
         payroll.setOvertimePay(overtimePay);
 
@@ -139,18 +139,18 @@ public class PayrollCalculator {
             em.merge(payroll);
         }
 
-        log.debug("급여 계산 완료: {} - 실수령액: {}원", employee.getName(), payroll.getNetPay());
+        log.debug("급여 계산 완료: {} - 실수령액: {}\uc6d0", employee.getName(), payroll.getNetPay());
     }
 
     /**
-     * 잔업수당 차등 계산
+     * 잡업수당 차등 계산
      */
     private int calculateOvertimePay(EntityManager em, int overtimeMinutes, int hourlyWage) {
         if (overtimeMinutes <= 0) {
             return 0;
         }
 
-        // 잔업 계수 조회
+        // 잡업 계수 조회
         List<OvertimeRate> rates = em.createQuery(
                 "SELECT o FROM OvertimeRate o ORDER BY o.fromMinutes", OvertimeRate.class)
                 .getResultList();
@@ -168,7 +168,7 @@ public class PayrollCalculator {
                 double pay = (applicableMinutes / 60.0) * hourlyWage * rate.getMultiplier();
                 totalPay += (int) pay;
 
-                log.trace("잔업구간: {}분 × {}배 = {}원",
+                log.trace("잡업구간: {}\ubd84 × {}배 = {}\uc6d0",
                         applicableMinutes, rate.getMultiplier(), (int) pay);
             }
         }
@@ -177,7 +177,7 @@ public class PayrollCalculator {
     }
 
     /**
-     * 특정 구간에서 적용 가능한 시간 계산
+     * 단정 구간에서 적용 가능한 시간 계산
      */
     private int getApplicableMinutes(OvertimeRate rate, int overtimeMinutes) {
         int fromMinutes = rate.getFromMinutes();
@@ -200,7 +200,7 @@ public class PayrollCalculator {
     }
 
     /**
-     * 특정 직원의 특정 월 급여 조회
+     * 단정 직원의 단정 월 급여 조회
      */
     public Payroll getPayroll(Long employeeId, int year, int month) {
         return DatabaseUtil.executeInTransaction(em -> {
