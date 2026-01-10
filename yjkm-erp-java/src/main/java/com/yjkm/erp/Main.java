@@ -10,7 +10,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 
@@ -18,8 +19,8 @@ import java.time.LocalDate;
  * YJKM ERP System - Main Application
  * 급여관리 ERP 시스템 Java Edition
  */
-@Slf4j
 public class Main extends Application {
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     private final SecomImportService secomService = new SecomImportService();
     private final PayrollCalculator payrollCalculator = new PayrollCalculator();
@@ -34,7 +35,7 @@ public class Main extends Application {
         root.setAlignment(Pos.TOP_CENTER);
         root.setStyle("-fx-background-color: #2b2b2b;");
 
-        // 타이틀
+        // 타이틈
         Label title = new Label("💼 YJKM 급여관리 ERP v2.0");
         title.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #ffffff;");
 
@@ -54,7 +55,7 @@ public class Main extends Application {
         buttonGrid.setAlignment(Pos.CENTER);
 
         // SECOM Import 버튼
-        Button secomBtn = createStyledButton("📥 SECOM 데이터 가져오기", "#4CAF50");
+        Button secomBtn = createStyledButton("📕 SECOM 데이터 가져오기", "#4CAF50");
         secomBtn.setOnAction(e -> {
             importSecomData(infoArea);
         });
@@ -98,11 +99,11 @@ public class Main extends Application {
         infoArea.appendText("=== YJKM 급여관리 ERP 시스템 v2.0 ===\n");
         infoArea.appendText("Java Edition - Modern & Optimized\n\n");
         infoArea.appendText("기능:\n");
-        infoArea.appendText("• SECOM 출퇴근 데이터 자동 import\n");
-        infoArea.appendText("• 차등 잔업 수당 계산\n");
+        infoArea.appendText("• SECOM 출와근 데이터 자동 import\n");
+        infoArea.appendText("• 차등 잡업 수당 계산\n");
         infoArea.appendText("• 교대 스케줄 관리\n");
-        infoArea.appendText("• Excel/CSV 일괄 등록\n");
-        infoArea.appendText("• 4대보험 자동 계산\n\n");
+        infoArea.appendText("• Excel/CSV 일굌 등록\n");
+        infoArea.appendText("• 4대보서 자동 계산\n\n");
         infoArea.appendText("준비 완료! 위 버튼을 클릭하여 시작하세요.\n");
     }
 
@@ -160,7 +161,7 @@ public class Main extends Application {
                     .getSingleResult();
 
             infoArea.appendText(String.format("• 재직 직원: %d명\n", totalEmployees));
-            infoArea.appendText(String.format("• 출퇴근 기록: %d건\n", totalAttendances));
+            infoArea.appendText(String.format("• 출쟱근 기록: %d건\n", totalAttendances));
             infoArea.appendText(String.format("• 급여 기록: %d건\n", totalPayrolls));
 
             return null;
@@ -174,7 +175,7 @@ public class Main extends Application {
             DatabaseUtil.initializeDatabase();
             infoArea.appendText("✅ 데이터베이스 초기화 완료\n");
             infoArea.appendText("   • 기본 근무형태 4개 생성\n");
-            infoArea.appendText("   • 기본 잔업 계수 3개 생성\n");
+            infoArea.appendText("   • 기본 잡업 계수 3개 생성\n");
         } catch (Exception e) {
             log.error("데이터베이스 초기화 실패", e);
             infoArea.appendText("❌ 오류: " + e.getMessage() + "\n");
@@ -191,7 +192,7 @@ public class Main extends Application {
             log.info("데이터베이스 초기화 완료");
 
             // SECOM 자동 임포트는 현재 비활성화
-            // (추후 필요시 활성화)
+            // (추후 중실한 경우 활성화)
 
         } catch (Exception e) {
             log.error("초기화 실패", e);
