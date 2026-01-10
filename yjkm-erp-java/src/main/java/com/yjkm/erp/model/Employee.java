@@ -1,22 +1,13 @@
 package com.yjkm.erp.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 
 /**
  * 직원 엔티티
  */
 @Entity
 @Table(name = "employees")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Employee {
 
     @Id
@@ -82,6 +73,94 @@ public class Employee {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    // ===== 생성자 =====
+    public Employee() {}
+
+    public Employee(Long employeeId, String empCode, String name, String department, String position, LocalDate hireDate, LocalDate resignationDate, Integer hourlyWage, WorkSchedule workSchedule, String phone, String email, String bankName, String accountNumber, String secomEmployeeId, String secomCardNumber, Integer annualLeave, Double remainingLeave, String notes, LocalDate createdAt, LocalDate updatedAt) {
+        this.employeeId = employeeId;
+        this.empCode = empCode;
+        this.name = name;
+        this.department = department;
+        this.position = position;
+        this.hireDate = hireDate;
+        this.resignationDate = resignationDate;
+        this.hourlyWage = hourlyWage;
+        this.workSchedule = workSchedule;
+        this.phone = phone;
+        this.email = email;
+        this.bankName = bankName;
+        this.accountNumber = accountNumber;
+        this.secomEmployeeId = secomEmployeeId;
+        this.secomCardNumber = secomCardNumber;
+        this.annualLeave = annualLeave;
+        this.remainingLeave = remainingLeave;
+        this.notes = notes;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    // ===== Getter/Setter =====
+    public Long getEmployeeId() { return employeeId; }
+    public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
+
+    public String getEmpCode() { return empCode; }
+    public void setEmpCode(String empCode) { this.empCode = empCode; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
+
+    public String getPosition() { return position; }
+    public void setPosition(String position) { this.position = position; }
+
+    public LocalDate getHireDate() { return hireDate; }
+    public void setHireDate(LocalDate hireDate) { this.hireDate = hireDate; }
+
+    public LocalDate getResignationDate() { return resignationDate; }
+    public void setResignationDate(LocalDate resignationDate) { this.resignationDate = resignationDate; }
+
+    public Integer getHourlyWage() { return hourlyWage; }
+    public void setHourlyWage(Integer hourlyWage) { this.hourlyWage = hourlyWage; }
+
+    public WorkSchedule getWorkSchedule() { return workSchedule; }
+    public void setWorkSchedule(WorkSchedule workSchedule) { this.workSchedule = workSchedule; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getBankName() { return bankName; }
+    public void setBankName(String bankName) { this.bankName = bankName; }
+
+    public String getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
+
+    public String getSecomEmployeeId() { return secomEmployeeId; }
+    public void setSecomEmployeeId(String secomEmployeeId) { this.secomEmployeeId = secomEmployeeId; }
+
+    public String getSecomCardNumber() { return secomCardNumber; }
+    public void setSecomCardNumber(String secomCardNumber) { this.secomCardNumber = secomCardNumber; }
+
+    public Integer getAnnualLeave() { return annualLeave; }
+    public void setAnnualLeave(Integer annualLeave) { this.annualLeave = annualLeave; }
+
+    public Double getRemainingLeave() { return remainingLeave; }
+    public void setRemainingLeave(Double remainingLeave) { this.remainingLeave = remainingLeave; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+    public LocalDate getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDate updatedAt) { this.updatedAt = updatedAt; }
+
+    // ===== 비즈니스 로직 =====
     /**
      * 퇴사 여부 확인
      */
