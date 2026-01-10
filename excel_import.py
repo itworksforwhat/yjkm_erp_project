@@ -1,12 +1,13 @@
 """
-Excel 파일을 이용한 직원 데이터 일괄 Import
-엑셀 템플릿 생성 및 대량 직원 추가 기능
+Excel, CSV, TXT 파일을 이용한 직원 데이터 일괄 Import
+여러 파일 형식 지원 및 대량 직원 추가 기능
 """
 
 import pandas as pd
 from datetime import datetime
 from typing import Tuple, List, Dict
 from pathlib import Path
+import os
 
 from database_v2 import Database
 from config_manager import ConfigManager
@@ -15,12 +16,18 @@ from leave_manager import LeaveManager
 
 class ExcelEmployeeImporter:
     """
-    Excel 파일로부터 직원 데이터를 가져와 시스템에 등록
+    Excel, CSV, TXT 파일로부터 직원 데이터를 가져와 시스템에 등록
+
+    지원 형식:
+    - Excel (.xlsx, .xls)
+    - CSV (.csv)
+    - TXT - 쉼표 구분 (.txt)
+    - TXT - 탭 구분 (.txt, .tsv)
     """
 
     def __init__(self, db_path: str = "payroll.db"):
         """
-        Excel Importer 초기화
+        Importer 초기화
 
         Args:
             db_path: 데이터베이스 경로
@@ -125,13 +132,100 @@ class ExcelEmployeeImporter:
 
         return output_path
 
-    def import_from_excel(self, excel_path: str, skip_duplicates: bool = True) -> Tuple[int, int, List[str]]:
+    def create_txt_template(self, output_path: str = "직원_가져오기_템플릿.txt",
+                           separator: str = "tab"):
         """
-        Excel 파일에서 직원 데이터 가져오기
+        직원 등록용 TXT 템플릿 생성 (CSV 또는 탭 구분)
 
         Args:
-            excel_path: Excel 파일 경로
+            output_path: 출력 파일 경로
+            separator: 구분자 ('comma' 또는 'tab')
+        """
+        # 근무 형태 목록 조회
+        schedules = self.config.get_all_schedules()
+
+        # 구분자 설정
+        if separator == 'comma' or output_path.endswith('.csv'):
+            sep = ','
+        else:
+            sep = '\t'
+
+        # 템플릿 데이터
+        template_data = {
+            '직원코드*': ['EMP001', 'EMP002', 'EMP003'],
+            '이름*': ['홍길동', '김철수', '이영희'],
+            '부서': ['생산팀', '관리팀', '생산팀'],
+            '직급': ['대리', '과장', '사원'],
+            '입사일*': ['2024-01-15', '2023-05-20', '2024-03-10'],
+            '시급*': [20000, 25000, 18000],
+            '근무형태*': ['주간근무 (09:00~18:00)', '주간근무 (09:00~18:00)', '2교대(주간) (06:00~18:00)'],
+            '전화번호': ['010-1234-5678', '010-2345-6789', '010-3456-7890'],
+            '이메일': ['hong@company.com', 'kim@company.com', 'lee@company.com'],
+            '은행명': ['KB국민은행', '신한은행', '우리은행'],
+            '계좌번호': ['123-456-789', '234-567-890', '345-678-901'],
+            '세콤직원ID': ['SECOM001', 'SECOM002', 'SECOM003'],
+            '세콤카드번호': ['CARD001', 'CARD002', 'CARD003'],
+            '비고': ['', '', '']
+        }
+
+        df = pd.DataFrame(template_data)
+
+        # TXT/CSV 저장
+        df.to_csv(output_path, sep=sep, index=False, encoding='utf-8-sig')
+
+        print(f"✅ TXT 템플릿 생성 완료: {output_path}")
+        if sep == ',':
+            print(f"   형식: 쉼표로 구분 (CSV)")
+        else:
+            print(f"   형식: 탭으로 구분")
+        print(f"   - 첫 줄: 열 이름 (필수 항목은 * 표시)")
+        print(f"   - 2-4줄: 샘플 데이터 (수정하여 사용)")
+
+        return output_path
+
+    def import_from_file(self, file_path: str, skip_duplicates: bool = True) -> Tuple[int, int, List[str]]:
+        """
+        파일에서 직원 데이터 가져오기 (Excel, CSV, TXT 자동 감지)
+
+        Args:
+            file_path: 파일 경로 (.xlsx, .xls, .csv, .txt, .tsv)
             skip_duplicates: 중복 직원코드 건너뛰기 여부
+
+        Returns:
+            (성공 건수, 실패 건수, 오류 메시지 리스트)
+        """
+        file_ext = os.path.splitext(file_path)[1].lower()
+
+        try:
+            # 파일 형식에 따라 읽기
+            if file_ext in ['.xlsx', '.xls']:
+                df = pd.read_excel(file_path, sheet_name='직원목록')
+            elif file_ext == '.csv':
+                # CSV는 쉼표 구분
+                df = pd.read_csv(file_path, encoding='utf-8-sig')
+            elif file_ext in ['.txt', '.tsv']:
+                # TXT는 탭 또는 쉼표로 시도
+                try:
+                    df = pd.read_csv(file_path, sep='\t', encoding='utf-8-sig')
+                except:
+                    df = pd.read_csv(file_path, sep=',', encoding='utf-8-sig')
+            else:
+                return 0, 1, [f"지원하지 않는 파일 형식: {file_ext}"]
+
+            # 공통 처리 함수 호출
+            return self._process_dataframe(df, skip_duplicates, file_path)
+
+        except Exception as e:
+            return 0, 1, [f"파일 읽기 오류: {str(e)}"]
+
+    def _process_dataframe(self, df: pd.DataFrame, skip_duplicates: bool, source_file: str) -> Tuple[int, int, List[str]]:
+        """
+        DataFrame에서 직원 데이터 처리 (Excel, CSV, TXT 공통)
+
+        Args:
+            df: pandas DataFrame
+            skip_duplicates: 중복 건너뛰기 여부
+            source_file: 원본 파일 경로
 
         Returns:
             (성공 건수, 실패 건수, 오류 메시지 리스트)
@@ -141,9 +235,6 @@ class ExcelEmployeeImporter:
         errors = []
 
         try:
-            # Excel 파일 읽기
-            df = pd.read_excel(excel_path, sheet_name='직원목록')
-
             # 근무 형태 맵핑
             schedules = self.config.get_all_schedules()
             schedule_map = {s['schedule_name']: s['schedule_id'] for s in schedules}
@@ -230,7 +321,7 @@ class ExcelEmployeeImporter:
                     errors.append(f"행 {idx + 2}: 처리 오류 - {str(e)}")
                     error_count += 1
 
-            print(f"✅ Excel 가져오기 완료")
+            print(f"✅ 파일 가져오기 완료: {source_file}")
             print(f"   성공: {success_count}건")
             print(f"   실패: {error_count}건")
 
@@ -241,18 +332,27 @@ class ExcelEmployeeImporter:
                 if len(errors) > 10:
                     print(f"   ... 외 {len(errors) - 10}건")
 
-        except FileNotFoundError:
-            errors.append(f"파일을 찾을 수 없습니다: {excel_path}")
-            error_count += 1
-
         except Exception as e:
-            errors.append(f"Excel 파일 읽기 오류: {str(e)}")
+            errors.append(f"데이터 처리 오류: {str(e)}")
             error_count += 1
 
         return success_count, error_count, errors
 
-    def export_to_excel(self, output_path: str = "직원목록_내보내기.xlsx",
-                       include_resigned: bool = False):
+    def import_from_excel(self, excel_path: str, skip_duplicates: bool = True) -> Tuple[int, int, List[str]]:
+        """
+        Excel 파일에서 직원 데이터 가져오기 (호환성 유지)
+
+        Args:
+            excel_path: Excel 파일 경로
+            skip_duplicates: 중복 직원코드 건너뛰기 여부
+
+        Returns:
+            (성공 건수, 실패 건수, 오류 메시지 리스트)
+        """
+        # 새로운 통합 함수 호출
+        return self.import_from_file(excel_path, skip_duplicates)
+
+    def export_to_excel(self, output_path: str = "직원목록.xlsx", include_resigned: bool = False):
         """
         현재 직원 목록을 Excel로 내보내기
 
