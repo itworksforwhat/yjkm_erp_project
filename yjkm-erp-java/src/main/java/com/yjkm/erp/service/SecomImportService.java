@@ -4,9 +4,6 @@ import com.yjkm.erp.importer.SecomFileParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * SECOM 임포트 서비스 - 최소 버전
- */
 public class SecomImportService {
     private static final Logger log = LoggerFactory.getLogger(SecomImportService.class);
 
