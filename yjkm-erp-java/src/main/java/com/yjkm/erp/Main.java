@@ -3,6 +3,7 @@ package com.yjkm.erp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -17,10 +18,21 @@ import java.nio.charset.StandardCharsets;
 public class Main {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
+    static {
+        // Windows 콘솔 UTF-8 인코딩 박똜
+        try {
+            System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+            System.setErr(new PrintStream(System.err, true, StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
-        // UTF-8 인코딩 명시
+        // UTF-8 시스템 프로퍼티 설정
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("sun.jnu.encoding", "UTF-8");
+        System.setProperty("native.encoding", "UTF-8");
 
         printBanner();
         
@@ -67,7 +79,7 @@ public class Main {
     }
 
     private static void initializeDatabase() {
-        // 데이터베이스 초기화 로직
+        // 데이터베이스 초기화 로깅
         // - 테이블 생성
         // - 기본 데이터 삽입
         // - S1/ERPExport.txt 자동 import
