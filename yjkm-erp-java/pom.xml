@@ -15,8 +15,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <javafx.version>21.0.1</javafx.version>
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
         <hibernate.version>6.4.1.Final</hibernate.version>
@@ -176,7 +178,7 @@
 
     <build>
         <plugins>
-            <!-- Maven Compiler Plugin (NO LOMBOK) -->
+            <!-- Maven Compiler Plugin with UTF-8 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -185,6 +187,7 @@
                     <source>17</source>
                     <target>17</target>
                     <release>17</release>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
 
@@ -198,7 +201,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Maven Exec Plugin -->
+            <!-- Maven Exec Plugin with UTF-8 -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -206,6 +209,12 @@
                 <configuration>
                     <mainClass>com.yjkm.erp.Main</mainClass>
                     <includeProjectDependencies>true</includeProjectDependencies>
+                    <systemProperties>
+                        <systemProperty>
+                            <key>file.encoding</key>
+                            <value>UTF-8</value>
+                        </systemProperty>
+                    </systemProperties>
                 </configuration>
             </plugin>
 
