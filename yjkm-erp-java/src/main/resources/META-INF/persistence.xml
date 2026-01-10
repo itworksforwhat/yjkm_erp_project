@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+             https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="yjkm-erp-pu" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <!-- Entity Classes -->
+        <class>com.yjkm.erp.model.Employee</class>
+        <class>com.yjkm.erp.model.WorkSchedule</class>
+        <class>com.yjkm.erp.model.Attendance</class>
+        <class>com.yjkm.erp.model.Leave</class>
+        <class>com.yjkm.erp.model.Payroll</class>
+        <class>com.yjkm.erp.model.OvertimeRate</class>
+        <class>com.yjkm.erp.model.ShiftSchedule</class>
+
+        <properties>
+            <!-- SQLite Configuration -->
+            <property name="jakarta.persistence.jdbc.driver" value="org.sqlite.JDBC"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlite:payroll.db"/>
+            <property name="jakarta.persistence.jdbc.user" value=""/>
+            <property name="jakarta.persistence.jdbc.password" value=""/>
+
+            <!-- Hibernate Properties -->
+            <property name="hibernate.dialect" value="org.hibernate.community.dialect.SQLiteDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+
+            <!-- Connection Pool (HikariCP) -->
+            <property name="hibernate.connection.provider_class"
+                      value="com.zaxxer.hikari.hibernate.HikariConnectionProvider"/>
+            <property name="hibernate.hikari.minimumIdle" value="5"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="20"/>
+            <property name="hibernate.hikari.idleTimeout" value="300000"/>
+
+            <!-- Performance -->
+            <property name="hibernate.jdbc.batch_size" value="20"/>
+            <property name="hibernate.order_inserts" value="true"/>
+            <property name="hibernate.order_updates" value="true"/>
+            <property name="hibernate.jdbc.batch_versioned_data" value="true"/>
+
+            <!-- Cache -->
+            <property name="hibernate.cache.use_second_level_cache" value="false"/>
+            <property name="hibernate.cache.use_query_cache" value="false"/>
+
+            <!-- Logging -->
+            <property name="hibernate.generate_statistics" value="false"/>
+        </properties>
+    </persistence-unit>
+</persistence>

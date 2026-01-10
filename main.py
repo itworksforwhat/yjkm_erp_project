@@ -299,7 +299,7 @@ class PayrollERP(ctk.CTk):
 
         ctk.CTkButton(
             btn_container,
-            text="📥 Excel 가져오기",
+            text="📥 파일 가져오기",
             command=self._import_employees_from_excel,
             height=40,
             width=150,
@@ -706,19 +706,26 @@ class PayrollERP(ctk.CTk):
                 f"파일: {template_path}\n\n"
                 f"1. 엑셀 파일을 열어 직원 정보를 입력하세요\n"
                 f"2. '작성가이드' 시트에서 항목별 설명을 확인하세요\n"
-                f"3. '📥 Excel 가져오기' 버튼으로 직원을 등록하세요"
+                f"3. '📥 파일 가져오기' 버튼으로 직원을 등록하세요\n\n"
+                f"※ CSV, TXT 파일도 가져오기 가능합니다"
             )
         except Exception as e:
             messagebox.showerror("오류", f"템플릿 생성 실패:\n{e}")
 
     def _import_employees_from_excel(self):
-        """Excel에서 직원 가져오기"""
+        """파일에서 직원 가져오기 (Excel, CSV, TXT 지원)"""
         from tkinter import filedialog
 
         # 파일 선택
         file_path = filedialog.askopenfilename(
-            title="직원 목록 Excel 파일 선택",
-            filetypes=[("Excel 파일", "*.xlsx *.xls"), ("모든 파일", "*.*")]
+            title="직원 목록 파일 선택",
+            filetypes=[
+                ("모든 지원 파일", "*.xlsx *.xls *.csv *.txt *.tsv"),
+                ("Excel 파일", "*.xlsx *.xls"),
+                ("CSV 파일", "*.csv"),
+                ("TXT 파일", "*.txt *.tsv"),
+                ("모든 파일", "*.*")
+            ]
         )
 
         if not file_path:
@@ -726,7 +733,7 @@ class PayrollERP(ctk.CTk):
 
         try:
             # 가져오기 실행
-            success_count, error_count, errors = self.excel_importer.import_from_excel(
+            success_count, error_count, errors = self.excel_importer.import_from_file(
                 file_path,
                 skip_duplicates=True
             )

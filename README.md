@@ -11,6 +11,8 @@
 - ✅ 직원 추가/조회
 - ✅ 근무 형태 개별 할당
 - ✅ 자동 연차 부여
+- ✅ **Excel/CSV/TXT 일괄 등록** (대량 등록)
+- ✅ 교대 스케줄 관리 (2교대 주간/야간)
 
 ### 2. 근무 시간 관리
 - ✅ 근무 형태 자유 추가/수정
@@ -72,7 +74,9 @@ python main.py
 │   ├── database_v2.py           # 데이터베이스
 │   ├── payroll_calculator_v2.py # 급여 계산
 │   ├── secom_integration.py     # 세콤 연동
-│   └── leave_manager.py         # 휴가 관리
+│   ├── leave_manager.py         # 휴가 관리
+│   ├── excel_import.py          # Excel/CSV/TXT 가져오기
+│   └── shift_scheduler.py       # 교대 스케줄 관리
 │
 ├── GUI 모듈/
 │   ├── gui_complete_part1.py    # GUI 헬퍼
@@ -85,7 +89,11 @@ python main.py
 │
 └── 문서/
     ├── README.md                # 이 파일
-    └── GUIDE.md                 # 사용 가이드
+    ├── NEW_FEATURES_GUIDE.md    # 신규 기능 가이드
+    ├── EXCEL_IMPORT_GUIDE.md    # Excel 일괄 등록 가이드
+    ├── TXT_CSV_IMPORT_GUIDE.md  # TXT/CSV 일괄 등록 가이드
+    ├── SECOM_CONNECTION_FIX.md  # 세콤 연동 오류 해결
+    └── TROUBLESHOOTING.md       # 문제 해결 가이드
 ```
 
 ## 🚀 빠른 시작
@@ -112,11 +120,22 @@ python main.py
 4. 저장
 
 ### 직원 추가
+
+**개별 추가:**
 1. "👥 직원 관리" 메뉴 클릭
 2. "➕ 직원 추가" 버튼 클릭
 3. 정보 입력
 4. 근무 형태 선택 (드롭다운)
 5. 저장
+
+**대량 추가 (Excel/CSV/TXT):**
+1. "👥 직원 관리" 메뉴 클릭
+2. "📝 템플릿 생성" 버튼 클릭
+3. 생성된 파일에 직원 정보 입력
+4. "📥 파일 가져오기" 버튼으로 등록
+5. 완료! (중복 자동 건너뛰기)
+
+📘 자세한 가이드: `EXCEL_IMPORT_GUIDE.md`, `TXT_CSV_IMPORT_GUIDE.md`
 
 ### 급여 계산
 1. "💰 급여 계산" 메뉴 클릭
