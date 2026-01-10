@@ -11,7 +11,7 @@
     <packaging>jar</packaging>
 
     <name>YJKM ERP System</name>
-    <description>급여관리 ERP 시스템 - Java Edition</description>
+    <description>급여관리 ERP 시스템 - Java Edition (Lombok 제거)</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -134,14 +134,6 @@
             <version>1.4.14</version>
         </dependency>
 
-        <!-- Lombok (Boilerplate Code Reduction) -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- Utilities -->
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -184,7 +176,7 @@
 
     <build>
         <plugins>
-            <!-- Maven Compiler Plugin + Lombok Annotation Processor -->
+            <!-- Maven Compiler Plugin (NO LOMBOK) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -193,16 +185,6 @@
                     <source>17</source>
                     <target>17</target>
                     <release>17</release>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
-                        </path>
-                    </annotationProcessorPaths>
-                    <annotationProcessors>
-                        <annotationProcessor>lombok.launch.AnnotationProcessorHider$AnnotationProcessor</annotationProcessor>
-                    </annotationProcessors>
                 </configuration>
             </plugin>
 
@@ -216,7 +198,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Maven Exec Plugin (Alternative to javafx:run) -->
+            <!-- Maven Exec Plugin -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -250,7 +232,7 @@
                 </executions>
             </plugin>
 
-            <!-- Surefire Plugin (Testing) -->
+            <!-- Surefire Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
