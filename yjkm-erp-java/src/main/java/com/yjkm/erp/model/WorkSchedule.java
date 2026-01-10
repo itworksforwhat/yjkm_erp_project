@@ -5,7 +5,9 @@ import lombok.*;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 /**
  * 근무형태 엔티티
  */

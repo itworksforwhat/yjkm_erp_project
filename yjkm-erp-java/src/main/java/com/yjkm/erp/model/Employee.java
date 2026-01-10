@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 
 /**
  * 직원 엔티티

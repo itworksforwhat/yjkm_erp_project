@@ -6,6 +6,9 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 
 /**
  * 근태 엔티티

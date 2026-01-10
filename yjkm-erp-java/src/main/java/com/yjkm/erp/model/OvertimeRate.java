@@ -2,7 +2,9 @@ package com.yjkm.erp.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 /**
  * 잔업 수당 계수 엔티티
  */

@@ -123,33 +123,11 @@ public class Main extends Application {
     }
 
     private void importSecomData(TextArea infoArea) {
-        infoArea.appendText("\n[SECOM Import] 시작...\n");
-
-        String secomFilePath = "S1/ERPExport.txt";
-        File secomFile = new File(secomFilePath);
-
-        if (!secomFile.exists()) {
-            infoArea.appendText("❌ 오류: S1/ERPExport.txt 파일을 찾을 수 없습니다\n");
-            infoArea.appendText("   현재 경로: " + secomFile.getAbsolutePath() + "\n");
-            return;
-        }
-
-        try {
-            SecomImportService.ImportResult result = secomService.importFromFile(secomFilePath);
-
-            if (result.success()) {
-                infoArea.appendText(String.format(
-                        "✅ 성공: 직원 %d명, 출퇴근 기록 %d건 import 완료\n",
-                        result.employeeCount(), result.attendanceCount()
-                ));
-            } else {
-                infoArea.appendText("❌ 실패: " + result.message() + "\n");
-            }
-        } catch (Exception e) {
-            log.error("SECOM import 실패", e);
-            infoArea.appendText("❌ 오류: " + e.getMessage() + "\n");
-        }
+        infoArea.appendText("\n[알림] SECOM 임포트 기능은 현재 비활성화되어 있습니다.\n");
+        infoArea.appendText("다음 버전에서 지원 예정입니다.\n");
+        log.info("SECOM 임포트 기능은 현재 비활성화 상태입니다.");
     }
+
 
     private void calculatePayroll(TextArea infoArea) {
         LocalDate now = LocalDate.now();
@@ -212,19 +190,17 @@ public class Main extends Application {
         try {
             // 데이터베이스 초기화
             DatabaseUtil.initializeDatabase();
+            log.info("데이터베이스 초기화 완료");
 
-            // S1 파일 자동 import (파일이 있으면)
-            File secomFile = new File("S1/ERPExport.txt");
-            if (secomFile.exists()) {
-                log.info("S1/ERPExport.txt 파일 발견 - 자동 import 시작");
-                SecomImportService.ImportResult result = secomService.importFromFile(secomFile.getAbsolutePath());
-                log.info("SECOM 자동 import 완료: 직원 {}, 출퇴근 {}",
-                        result.employeeCount(), result.attendanceCount());
-            }
+            // SECOM 자동 임포트는 현재 비활성화
+            // (추후 필요시 활성화)
+
         } catch (Exception e) {
             log.error("초기화 실패", e);
+            e.printStackTrace();
         }
     }
+
 
     public static void main(String[] args) {
         log.info("=== YJKM ERP System v2.0 ===");

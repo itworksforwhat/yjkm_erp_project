@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 /**
  * 교대 스케줄 엔티티
  * 2교대제 주간/야간 로테이션 관리
