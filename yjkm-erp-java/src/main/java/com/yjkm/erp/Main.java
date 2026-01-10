@@ -11,6 +11,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -20,6 +22,11 @@ import java.time.LocalDate;
  * 급여관리 ERP 시스템 Java Edition
  */
 @Slf4j
+public class SecomImportService {
+    private static final Logger log = LoggerFactory.getLogger(SecomImportService.class);
+
+    public ImportResult importFromFile(String filePath) {
+        log.info("...");
 public class Main extends Application {
 
     private final SecomImportService secomService = new SecomImportService();
@@ -206,5 +213,7 @@ public class Main extends Application {
         log.info("=== YJKM ERP System v2.0 ===");
         log.info("Java Edition - Starting...");
         launch(args);
+    }
+}
     }
 }
